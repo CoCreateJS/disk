@@ -61,7 +61,7 @@ export async function init(options = {}) {
         catch (error) { if (error.code === 'ENOENT') return false; throw error }
     }
 
-    return { execute, directory: root }
+    return { execute }
 }
 
 export default { init }

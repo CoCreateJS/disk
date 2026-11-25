@@ -69,7 +69,7 @@ export async function init(options = {}) {
         catch (error) { if (isMissingDiskError(error)) return false; throw error }
     }
 
-    return { execute, directory: options.directory ?? 'CoCreateDB' }
+    return { execute }
 }
 
 export default { init }
