@@ -1,6 +1,6 @@
 const operations = new Set(['read', 'write', 'delete', 'has', 'list', 'clear'])
 
-/** Validate the shared request contract and return normalized relative path segments. */
+/** Validate the shared request contract and return its validated relative path. */
 export function validateRequest({ operation, kind, path } = {}) {
     if (!operations.has(operation)) throw new Error(`Unsupported disk operation: ${operation}`)
 
