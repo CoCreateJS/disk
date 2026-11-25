@@ -1,10 +1,11 @@
 # Architecture
 
 `@cocreate/disk` provides the runtime-specific storage primitive behind one
-small interface: `disk.execute({ operation, kind, path, data })`. Node uses the
-local filesystem; browser builds use the Origin Private File System. Conditional
-package exports select `src/server.js` or `src/client.js` without making callers
-choose a second API.
+small interface: `disk.execute({ operation, kind, path, data })`. Shared request
+validation and path rules live in `src/core.js`; Node uses the local filesystem,
+and browser builds use the Origin Private File System. Conditional package
+exports select `src/server.js` or `src/client.js` without making callers choose
+a second API.
 
 Initialization creates a per-instance object and keeps runtime handles in that
 instance's closure. The module does not maintain a global disk registry or

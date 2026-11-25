@@ -1,45 +1,49 @@
 import { access, mkdir, readFile, readdir, rename, rm, unlink, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { validateRequest } from './core.js'
 
-const operations = new Set(['read', 'write', 'delete', 'has', 'list', 'clear'])
 let temporaryId = 0
 
-function createPath(root, value) {
-    if (typeof value !== 'string' || !value || isAbsolute(value)) throw new Error('Disk path must be a non-empty relative path')
-    const path = resolve(root, value)
-    const fromRoot = relative(root, path)
-    if (fromRoot === '..' || fromRoot.startsWith(`..${sep}`) || isAbsolute(fromRoot)) throw new Error('Disk path must stay inside its configured directory')
-    return path
-}
+function createPath(root, path) { return join(root, path) }
 
 /** Initialize an isolated server disk and return its operation interface. */
 export async function init(options = {}) {
     const root = resolve(options.directory ?? resolve(homedir(), '.cocreate', 'db'))
     await mkdir(root, { recursive: true })
+    const directories = new Map([[root, Promise.resolve()]])
+
+    function ensureDirectory(path) {
+        let pending = directories.get(path)
+        if (!pending) {
+            pending = mkdir(path, { recursive: true })
+            directories.set(path, pending)
+            pending.catch(() => { if (directories.get(path) === pending) directories.delete(path) })
+        }
+        return pending
+    }
 
     async function execute(request = {}) {
-        const { operation, kind, path, data } = request
-        if (!operations.has(operation)) throw new Error(`Unsupported disk operation: ${operation}`)
+        const { operation, data } = request
+        const path = validateRequest(request)
         if (operation === 'clear') {
-            if (kind !== 'directory') throw new Error('Disk clear requires kind "directory"')
             await rm(root, { recursive: true, force: true })
             await mkdir(root, { recursive: true })
+            directories.clear()
+            directories.set(root, Promise.resolve())
             return true
         }
 
         if (operation === 'list') {
-            if (kind !== 'directory') throw new Error('Disk list requires kind "directory"')
             const directory = path ? createPath(root, path) : root
             try { return await readdir(directory) }
             catch (error) { if (error.code === 'ENOENT') return []; throw error }
         }
 
-        if (kind !== 'file') throw new Error(`Disk ${operation} requires kind "file"`)
         const file = createPath(root, path)
         if (operation === 'read') return await readFile(file, 'utf8')
         if (operation === 'write') {
-            await mkdir(dirname(file), { recursive: true })
+            await ensureDirectory(dirname(file))
             const temporary = `${file}.${process.pid}.${temporaryId++}.tmp`
             try {
                 await writeFile(temporary, data)
