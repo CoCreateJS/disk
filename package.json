@@ -1,0 +1,49 @@
+{
+  "name": "@cocreate/disk",
+  "version": "1.0.0",
+  "description": "Composable client and server disk operations for CoCreate.",
+  "keywords": [
+    "cocreate",
+    "disk",
+    "storage",
+    "filesystem",
+    "opfs",
+    "server-storage",
+    "client-storage"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./src/server.js",
+  "browser": "./src/client.js",
+  "exports": {
+    ".": {
+      "node": "./src/server.js",
+      "deno": "./src/server.js",
+      "browser": "./src/client.js",
+      "default": "./src/server.js"
+    },
+    "./server": "./src/server.js",
+    "./client": "./src/client.js"
+  },
+  "files": [
+    "src/",
+    "specifications/",
+    "docs/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CoCreateJS/disk.git"
+  },
+  "author": "CoCreate LLC",
+  "bugs": {
+    "url": "https://github.com/CoCreateJS/disk/issues"
+  },
+  "homepage": "https://CoCreateJS.com/docs/disk",
+  "dependencies": {}
+}
