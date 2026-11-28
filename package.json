@@ -45,5 +45,8 @@
     "url": "https://github.com/CoCreateJS/disk/issues"
   },
   "homepage": "https://CoCreateJS.com/docs/disk",
-  "dependencies": {}
+  "dependencies": {},
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
 }

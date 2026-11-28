@@ -1,7 +1,7 @@
 import { access, mkdir, readFile, readdir, rename, rm, unlink, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
-import { validateRequest } from './core.js'
+import { createStorage } from './core.js'
 
 let temporaryId = 0
 
@@ -23,9 +23,8 @@ export async function init(options = {}) {
         return pending
     }
 
-    async function execute(request = {}) {
+    async function accessDisk(request, path) {
         const { operation, data } = request
-        const path = validateRequest(request)
         if (operation === 'clear') {
             await rm(root, { recursive: true, force: true })
             await mkdir(root, { recursive: true })
@@ -45,11 +44,13 @@ export async function init(options = {}) {
         if (operation === 'write') {
             await ensureDirectory(dirname(file))
             const temporary = `${file}.${process.pid}.${temporaryId++}.tmp`
+            let renamed = false
             try {
                 await writeFile(temporary, data)
                 await rename(temporary, file)
+                renamed = true
             } finally {
-                await unlink(temporary).catch(error => { if (error.code !== 'ENOENT') throw error })
+                if (!renamed) await unlink(temporary).catch(error => { if (error.code !== 'ENOENT') throw error })
             }
             return true
         }
@@ -61,7 +62,7 @@ export async function init(options = {}) {
         catch (error) { if (error.code === 'ENOENT') return false; throw error }
     }
 
-    return { execute }
+    return createStorage(accessDisk, options)
 }
 
 export default { init }

@@ -1,4 +1,4 @@
-import { isMissingDiskError, pathSegments, validateRequest } from './core.js'
+import { isMissingDiskError, pathSegments, createStorage } from './core.js'
 
 /** Initialize an isolated browser disk backed by the Origin Private File System. */
 export async function init(options = {}) {
@@ -25,9 +25,8 @@ export async function init(options = {}) {
         return parent
     }
 
-    async function execute(request = {}) {
+    async function accessDisk(request, path) {
         const { operation, data } = request
-        const path = validateRequest(request)
         const parts = path ? path.split('/') : []
         if (operation === 'clear') {
             for await (const [name] of base.entries()) await base.removeEntry(name, { recursive: true })
@@ -69,7 +68,7 @@ export async function init(options = {}) {
         catch (error) { if (isMissingDiskError(error)) return false; throw error }
     }
 
-    return { execute }
+    return createStorage(accessDisk, options)
 }
 
 export default { init }
